@@ -409,13 +409,15 @@
     (asserts! (get verification-status issuer-entity) (err ERR-NOT-AUTHORIZED))
     
     ;; If certifying a product, check if it exists
-    (when (is-some product-id)
+    (if (is-some product-id)
       (asserts! (is-some (get-product-details (unwrap! product-id (err ERR-PRODUCT-NOT-FOUND)))) (err ERR-PRODUCT-NOT-FOUND))
+      true
     )
     
     ;; If certifying an entity, check if it exists
-    (when (is-some recipient-entity-id)
+    (if (is-some recipient-entity-id)
       (asserts! (is-some (get-entity-details (unwrap! recipient-entity-id (err ERR-ENTITY-NOT-FOUND)))) (err ERR-ENTITY-NOT-FOUND))
+      true
     )
     
     ;; Create certificate
@@ -521,11 +523,15 @@
         (new-state 
           (match (get entity-type to-entity)
             entity-type-value
-            (cond
-              ((is-eq entity-type-value u2) u2) ;; Manufacturer -> In Production
-              ((is-eq entity-type-value u3) u5) ;; Distributor -> At Distributor
-              ((is-eq entity-type-value u4) u6) ;; Retailer -> At Retailer
-              (true (get current-state product)) ;; Default: keep current state
+            (if (is-eq entity-type-value u2) 
+              u2 ;; Manufacturer -> In Production
+              (if (is-eq entity-type-value u3) 
+                u5 ;; Distributor -> At Distributor
+                (if (is-eq entity-type-value u4) 
+                  u6 ;; Retailer -> At Retailer
+                  (get current-state product) ;; Default: keep current state
+                )
+              )
             )
             (get current-state product)
           )
