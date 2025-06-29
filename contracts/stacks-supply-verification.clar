@@ -639,9 +639,8 @@
     (asserts! (is-eq entity-id (get current-custodian product)) (err ERR-NOT-CURRENT-CUSTODIAN))
     
     ;; Check if current custodian is a retailer
-    (match (get-entity-details entity-id)
-      entity (asserts! (is-eq (get entity-type entity) u4) (err ERR-INVALID-STATE-TRANSITION))
-      (err ERR-ENTITY-NOT-FOUND)
+    (let ((entity (unwrap! (get-entity-details entity-id) (err ERR-ENTITY-NOT-FOUND))))
+      (asserts! (is-eq (get entity-type entity) u4) (err ERR-INVALID-STATE-TRANSITION))
     )
     
     ;; Update product state to sold
