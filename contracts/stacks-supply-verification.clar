@@ -150,27 +150,27 @@
 ;; Initialize contract with basic entity types, product states, and certification types
 (begin
   ;; Entity Types
-  (map-set entity-types { type-id: u1 } { type-name: "Producer" })
-  (map-set entity-types { type-id: u2 } { type-name: "Manufacturer" })
-  (map-set entity-types { type-id: u3 } { type-name: "Distributor" })
-  (map-set entity-types { type-id: u4 } { type-name: "Retailer" })
-  (map-set entity-types { type-id: u5 } { type-name: "Certification Authority" })
+  (map-set entity-types { type-id: u1 } { type-name: u"Producer" })
+  (map-set entity-types { type-id: u2 } { type-name: u"Manufacturer" })
+  (map-set entity-types { type-id: u3 } { type-name: u"Distributor" })
+  (map-set entity-types { type-id: u4 } { type-name: u"Retailer" })
+  (map-set entity-types { type-id: u5 } { type-name: u"Certification Authority" })
   
   ;; Product States
-  (map-set product-states { state-id: u1 } { state-name: "Origin Certified" })
-  (map-set product-states { state-id: u2 } { state-name: "In Production" })
-  (map-set product-states { state-id: u3 } { state-name: "Quality Control" })
-  (map-set product-states { state-id: u4 } { state-name: "In Transit" })
-  (map-set product-states { state-id: u5 } { state-name: "At Distributor" })
-  (map-set product-states { state-id: u6 } { state-name: "At Retailer" })
-  (map-set product-states { state-id: u7 } { state-name: "Sold" })
+  (map-set product-states { state-id: u1 } { state-name: u"Origin Certified" })
+  (map-set product-states { state-id: u2 } { state-name: u"In Production" })
+  (map-set product-states { state-id: u3 } { state-name: u"Quality Control" })
+  (map-set product-states { state-id: u4 } { state-name: u"In Transit" })
+  (map-set product-states { state-id: u5 } { state-name: u"At Distributor" })
+  (map-set product-states { state-id: u6 } { state-name: u"At Retailer" })
+  (map-set product-states { state-id: u7 } { state-name: u"Sold" })
   
   ;; Certification Types
-  (map-set certification-types { cert-type-id: u1 } { cert-type-name: "Organic" })
-  (map-set certification-types { cert-type-id: u2 } { cert-type-name: "Fair Trade" })
-  (map-set certification-types { cert-type-id: u3 } { cert-type-name: "Sustainably Sourced" })
-  (map-set certification-types { cert-type-id: u4 } { cert-type-name: "Non-GMO" })
-  (map-set certification-types { cert-type-id: u5 } { cert-type-name: "Carbon Neutral" })
+  (map-set certification-types { cert-type-id: u1 } { cert-type-name: u"Organic" })
+  (map-set certification-types { cert-type-id: u2 } { cert-type-name: u"Fair Trade" })
+  (map-set certification-types { cert-type-id: u3 } { cert-type-name: u"Sustainably Sourced" })
+  (map-set certification-types { cert-type-id: u4 } { cert-type-name: u"Non-GMO" })
+  (map-set certification-types { cert-type-id: u5 } { cert-type-name: u"Carbon Neutral" })
 )
 
 ;; Helper function to check if caller is authorized as an entity
@@ -324,12 +324,12 @@
       (or 
         (is-eq tx-sender (var-get contract-owner))
         (match (get-entity-id-by-principal tx-sender)
-          cert-entity-id 
-          (match (get-entity-details cert-entity-id)
+          ok-cert-entity-id 
+          (match (get-entity-details ok-cert-entity-id)
             cert-entity (is-eq (get entity-type cert-entity) u5) ;; Is certification authority
             false
           )
-          false
+          err-val false
         )
       )
       (err ERR-NOT-AUTHORIZED)
@@ -520,20 +520,17 @@
     ;; Determine new state based on entity type
     (let
       (
+        (entity-type-value (get entity-type to-entity))
         (new-state 
-          (match (get entity-type to-entity)
-            entity-type-value
-            (if (is-eq entity-type-value u2) 
-              u2 ;; Manufacturer -> In Production
-              (if (is-eq entity-type-value u3) 
-                u5 ;; Distributor -> At Distributor
-                (if (is-eq entity-type-value u4) 
-                  u6 ;; Retailer -> At Retailer
-                  (get current-state product) ;; Default: keep current state
-                )
+          (if (is-eq entity-type-value u2) 
+            u2 ;; Manufacturer -> In Production
+            (if (is-eq entity-type-value u3) 
+              u5 ;; Distributor -> At Distributor
+              (if (is-eq entity-type-value u4) 
+                u6 ;; Retailer -> At Retailer
+                (get current-state product) ;; Default: keep current state
               )
             )
-            (get current-state product)
           )
         )
       )
@@ -611,7 +608,7 @@
     )
     
     ;; Update product state if this is a quality control checkpoint
-    (if (is-eq checkpoint-type "Quality Control")
+    (if (is-eq checkpoint-type u"Quality Control")
       (map-set products
         { product-id: product-id }
         (merge product { 
