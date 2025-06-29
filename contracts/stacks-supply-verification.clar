@@ -611,7 +611,7 @@
     )
     
     ;; Update product state if this is a quality control checkpoint
-    (when (is-eq checkpoint-type "Quality Control")
+    (if (is-eq checkpoint-type "Quality Control")
       (map-set products
         { product-id: product-id }
         (merge product { 
@@ -619,6 +619,7 @@
           sustainability-score: sustainability-score ;; Update with latest score
         })
       )
+      true
     )
     
     ;; Increment checkpoint ID
